@@ -1,8 +1,10 @@
+import { useState, useEffect } from 'react'
 import type { SVGProps } from 'react'
 
 import * as Checkbox from '@radix-ui/react-checkbox'
 
 import { api } from '@/utils/client/api'
+
 
 /**
  * QUESTION 3:
@@ -64,17 +66,68 @@ import { api } from '@/utils/client/api'
  */
 
 export const TodoList = () => {
-  const { data: todos = [] } = api.todo.getAll.useQuery({
+  const [todos, setTodos] = useState<{
+    id: number
+    body: string
+    status: 'completed' | 'pending'
+  }[]>([])
+  const { data: dataAPI = [] } = api.todo.getAll.useQuery({
     statuses: ['completed', 'pending'],
-  })
+  });
+  const { mutate: updateTodoStatus } = api.todoStatus.update.useMutation()
+  const { mutate: deleteTodo } = api.todo.delete.useMutation()
+
+  const handleUpdateTodoStatus = (todoId: number, status: 'completed' | 'pending') => {
+    updateTodoStatus({
+      todoId: todoId,
+      status,
+    })
+
+    setTodos((prevTodos) => {
+      return prevTodos.map((todo) => {
+        if (todo.id === todoId) {
+          return {
+            ...todo,
+            status,
+          }
+        }
+        return todo
+      })
+    })
+
+  }
+
+  useEffect(() => {
+    setTodos(dataAPI);
+  }, [dataAPI]);
+
+  const handleDeleteTodo = (todoId: number) => {
+    deleteTodo({
+      id: todoId,
+    })
+    setTodos((prevTodos) => {
+      return prevTodos.filter((todo) => todo.id !== todoId)
+    })
+  }
+
+  const renderCSS = (status: 'completed' | 'pending') => {
+    if (status === 'completed') {
+      return 'line-through text-gray-500 bg-darker'
+    }
+    return ''
+  }
 
   return (
-    <ul className="grid grid-cols-1 gap-y-3">
+    <ul className="grid grid-cols-1 gap-y-3 ">
       {todos.map((todo) => (
         <li key={todo.id}>
-          <div className="flex items-center rounded-12 border border-gray-200 px-4 py-3 shadow-sm">
+          <div className={`flex items-center text-gray-700 rounded-12 border border-gray-200 px-4 py-3 shadow-sm ${renderCSS(todo.status)}`}>
             <Checkbox.Root
               id={String(todo.id)}
+              onClick={() => {
+                handleUpdateTodoStatus(todo.id, todo.status === 'completed' ? 'pending' : 'completed')
+              }}
+              checked={todo.status === 'completed'}
               className="flex h-6 w-6 items-center justify-center rounded-6 border border-gray-300 focus:border-gray-700 focus:outline-none data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700"
             >
               <Checkbox.Indicator>
@@ -82,9 +135,17 @@ export const TodoList = () => {
               </Checkbox.Indicator>
             </Checkbox.Root>
 
-            <label className="block pl-3 font-medium" htmlFor={String(todo.id)}>
+            <label className={`block pl-3 font-medium font-inter`} htmlFor={String(todo.id)}>
               {todo.body}
             </label>
+            <button
+              className="ml-auto p-1 hover:text-red-600"
+              aria-label="Delete"
+              onClick={() => handleDeleteTodo(todo.id)}
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+
           </div>
         </li>
       ))}

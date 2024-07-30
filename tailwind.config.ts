@@ -17,6 +17,9 @@ export default {
       },
       padding: {
         '32': '32px',
+      },
+      background: {
+        "darker": "#f1f5f9"
       }
     },
     colors: {
@@ -32,6 +35,7 @@ export default {
       'gray-800': '#1e293b',
       'gray-900': '#0f172a',
       'gray-950': '#020617',
+      'darker': '#f1f5f9',
     },
     borderRadius: {
       6: '6px',
