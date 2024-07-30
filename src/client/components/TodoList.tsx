@@ -65,67 +65,25 @@ import { api } from '@/utils/client/api'
  *  - https://auto-animate.formkit.com
  */
 
-export const TodoList = () => {
-  const [todos, setTodos] = useState<{
-    id: number
-    body: string
-    status: 'completed' | 'pending'
-  }[]>([])
-  const { data: dataAPI = [] } = api.todo.getAll.useQuery({
-    statuses: ['completed', 'pending'],
-  });
-  const { mutate: updateTodoStatus } = api.todoStatus.update.useMutation()
-  const { mutate: deleteTodo } = api.todo.delete.useMutation()
-
-  const handleUpdateTodoStatus = (todoId: number, status: 'completed' | 'pending') => {
-    updateTodoStatus({
-      todoId: todoId,
-      status,
-    })
-
-    setTodos((prevTodos) => {
-      return prevTodos.map((todo) => {
-        if (todo.id === todoId) {
-          return {
-            ...todo,
-            status,
-          }
-        }
-        return todo
-      })
-    })
-
-  }
-
-  useEffect(() => {
-    setTodos(dataAPI);
-  }, [dataAPI]);
-
-  const handleDeleteTodo = (todoId: number) => {
-    deleteTodo({
-      id: todoId,
-    })
-    setTodos((prevTodos) => {
-      return prevTodos.filter((todo) => todo.id !== todoId)
-    })
-  }
+export const TodoList = (props) => {
+  const { dataTodos, handleUpdateTodoList, handleDeleteTodo } = props
 
   const renderCSS = (status: 'completed' | 'pending') => {
     if (status === 'completed') {
       return 'line-through text-gray-500 bg-darker'
     }
-    return ''
+    return 'text-gray-700'
   }
 
   return (
     <ul className="grid grid-cols-1 gap-y-3 ">
-      {todos.map((todo) => (
+      {dataTodos && dataTodos.length > 0 && dataTodos.map((todo: any) => (
         <li key={todo.id}>
-          <div className={`flex items-center text-gray-700 rounded-12 border border-gray-200 px-4 py-3 shadow-sm ${renderCSS(todo.status)}`}>
+          <div className={`flex items-center rounded-12 border border-gray-200 p-custom shadow-sm ${renderCSS(todo.status)}`}>
             <Checkbox.Root
               id={String(todo.id)}
               onClick={() => {
-                handleUpdateTodoStatus(todo.id, todo.status === 'completed' ? 'pending' : 'completed')
+                handleUpdateTodoList(todo.id, todo.status === 'completed' ? 'pending' : 'completed')
               }}
               checked={todo.status === 'completed'}
               className="flex h-6 w-6 items-center justify-center rounded-6 border border-gray-300 focus:border-gray-700 focus:outline-none data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700"
@@ -141,7 +99,9 @@ export const TodoList = () => {
             <button
               className="ml-auto p-1 hover:text-red-600"
               aria-label="Delete"
-              onClick={() => handleDeleteTodo(todo.id)}
+              onClick={() =>
+                handleDeleteTodo(todo.id)
+              }
             >
               <XMarkIcon className="h-5 w-5" />
             </button>

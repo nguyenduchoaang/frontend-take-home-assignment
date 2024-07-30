@@ -25,9 +25,7 @@ import { api } from '@/utils/client/api'
 
 export const CreateTodoForm = () => {
   const [todoBody, setTodoBody] = useState('')
-
   const apiContext = api.useContext()
-
   const { mutate: createTodo, isLoading: isCreatingTodo } =
     api.todo.create.useMutation({
       onSuccess: () => {

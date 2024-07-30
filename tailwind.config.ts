@@ -17,10 +17,11 @@ export default {
       },
       padding: {
         '32': '32px',
+        '12': '12px',
+        '16': '16px',
+        'custom': '12px 12px 12px 16px',
       },
-      background: {
-        "darker": "#f1f5f9"
-      }
+
     },
     colors: {
       'white': '#ffffff',
@@ -42,6 +43,7 @@ export default {
       12: '12px',
       full: '9999px',
     },
+
   },
   plugins: [],
 } satisfies Config
