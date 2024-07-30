@@ -14,7 +14,7 @@ module.exports = {
   extends: [
     'plugin:@typescript-eslint/recommended', //
     'next',
-    'prettier',
+    'prettier',``
   ],
   rules: {
     '@next/next/no-html-link-for-pages': 'off',
@@ -58,7 +58,7 @@ module.exports = {
         'newlines-between': 'always',
       },
     ],
-    'prettier/prettier': '0',
+    'prettier/prettier': 0,
   },
   overrides: [
     {

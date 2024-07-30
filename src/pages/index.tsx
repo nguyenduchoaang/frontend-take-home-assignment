@@ -1,5 +1,5 @@
-import { useState, useReducer, useEffect } from 'react'
 import * as Tabs from '@radix-ui/react-tabs'
+import { useReducer, useEffect } from 'react'
 import { CreateTodoForm } from '@/client/components/CreateTodoForm'
 import { TodoList } from '@/client/components/TodoList'
 import { api } from '@/utils/client/api'
@@ -19,29 +19,31 @@ import { api } from '@/utils/client/api'
  *  - https://www.radix-ui.com/docs/primitives/components/tabs
  */
 
-type TodoStatusType = 'All' | 'Pending' | 'Completed'
-
 const initStates = {
   todoStatus: [
     {
       id: 1,
-      status: "All"
+      status: "All",
+      queryStatus: ['completed', 'pending'],
     },
     {
       id: 2,
       status: "Pending",
+      queryStatus: ['pending']
     },
     {
       id: 3,
-      status: "Completed"
+      status: "Completed",
+      queryStatus: ['completed']
     }
   ],
-  selectedTab: 1,
+  selectedTab: "all",
+  queryStatus: ['completed', 'pending'],
   dataTodos: []
 }
 
 const action = {
-  SET_SELECTED_TAB: (payload: TodoStatusType) => ({
+  SET_SELECTED_TAB: (payload: any) => ({
     type: 'SET_SELECTED_TAB',
     payload
   }),
@@ -64,28 +66,40 @@ const reducer = (state: typeof initStates, action: { type: string, payload: any 
     case 'SET_SELECTED_TAB':
       return {
         ...state,
-        selectedTab: action.payload
+        selectedTab: action.payload,
+        queryStatus: state.todoStatus.find((item) => item.status.toLocaleLowerCase() === action.payload.toLocaleLowerCase())?.queryStatus
       }
     case 'SET_DATA_API':
+      const data = action.payload.sort((a: number, b: number) => - (a.id - b.id))
+
+      console.log("data", data)
       return {
         ...state,
         dataTodos: action.payload
       }
     case 'UPDATE_TODO':
       const { dataTodos } = state
+      const status = action.payload.status
       const newDataTodos = dataTodos.map((item: any) => {
         if (item.id === action.payload.todoId) {
           return {
             ...item,
-            status: action.payload.status
+            status: status,
           }
         }
         return item
       })
+      if (state.selectedTab === 'all') {
+        return {
+          ...state,
+          dataTodos: newDataTodos
+        }
+      }
       return {
         ...state,
-        dataTodos: newDataTodos
+        dataTodos: newDataTodos.filter((item: any) => item.id !== action.payload.todoId)
       }
+
     case 'DELETE_TODO':
       const dataTodosAfterDelete = state.dataTodos.filter((item: any) => item.id !== action.payload)
       return {
@@ -99,8 +113,9 @@ const reducer = (state: typeof initStates, action: { type: string, payload: any 
 
 const Index = () => {
   const [state, dispatch] = useReducer(reducer, initStates)
+  const { queryStatus } = state;
   const { data: dataTodos = [] } = api.todo.getAll.useQuery({
-    statuses: ['completed', 'pending'],
+    statuses: queryStatus,
   });
   const { mutate: updateTodoStatus } = api.todoStatus.update.useMutation()
   const { mutate: deleteTodo } = api.todo.delete.useMutation()
@@ -109,10 +124,16 @@ const Index = () => {
     dispatch(action.SET_DATA_API(dataTodos))
   }, [dataTodos])
 
+  const handleSelectedTab = (value) => {
+    const valueNormalize = value.toLowerCase()
+    dispatch(action.SET_SELECTED_TAB(valueNormalize))
+  }
+
   const handleUpdateTodoList = (todoId: number, status: 'completed' | 'pending') => {
     const data = {
       todoId: todoId,
-      status
+      status,
+
     }
     updateTodoStatus(data)
     dispatch(action.UPDATE_TODO(data))
@@ -126,15 +147,13 @@ const Index = () => {
 
   }
 
-
-  const renderCSSButton = (selectedTab: number, itemId: number) => {
-    if (selectedTab === itemId) {
+  const renderCSSButton = (selectedTab: string, item: string) => {
+    if (selectedTab.toLocaleLowerCase() === item.toLocaleLowerCase()) {
       return "bg-gray-800 text-white"
     } else {
       return "bg-white text-gray-700"
     }
   }
-
 
   return (
     <main className="mx-auto w-[480px] pt-12">
@@ -143,13 +162,13 @@ const Index = () => {
           Todo App
         </h1>
 
-        <Tabs.Root value={state.selectedTab} onValueChange={(value) => dispatch(action.SET_SELECTED_TAB(value as TodoStatusType))}>
+        <Tabs.Root value={state.selectedTab} onValueChange={(value) => handleSelectedTab(value)}>
           <Tabs.List className="flex pt-5">
             {state.todoStatus.map((item) => (
               <Tabs.Trigger
                 key={item.id}
-                value={item.id}
-                className={`flex border text-14 border-gray-200 justify-center items-center rounded-full px-32 py-2 mr-3 font-700 ${renderCSSButton(state.selectedTab, item.id)}`}
+                value={item.status}
+                className={`flex border text-14 border-gray-200 justify-center items-center rounded-full px-32 py-2 mr-3 font-700 ${renderCSSButton(state.selectedTab, item.status)}`}
               >
                 {item.status}
               </Tabs.Trigger>
@@ -159,6 +178,7 @@ const Index = () => {
           <div className="pt-10">
             <TodoList
               dataTodos={state.dataTodos}
+              selectedTab={state.selectedTab}
               handleUpdateTodoList={handleUpdateTodoList}
               handleDeleteTodo={handleDeleteTodo}
             />

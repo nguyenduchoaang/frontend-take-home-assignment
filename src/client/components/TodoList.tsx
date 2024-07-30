@@ -1,10 +1,8 @@
-import { useState, useEffect } from 'react'
-import type { SVGProps } from 'react'
-
-import * as Checkbox from '@radix-ui/react-checkbox'
-
-import { api } from '@/utils/client/api'
-
+import { useState, useEffect, useRef } from 'react';
+import * as Checkbox from '@radix-ui/react-checkbox';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
+import autoAnimate from '@formkit/auto-animate';
+import type { SVGProps } from 'react';
 
 /**
  * QUESTION 3:
@@ -65,8 +63,20 @@ import { api } from '@/utils/client/api'
  *  - https://auto-animate.formkit.com
  */
 
-export const TodoList = (props) => {
+export const TodoList = (props: any) => {
   const { dataTodos, handleUpdateTodoList, handleDeleteTodo } = props
+  const [parent, enableAnimations] = useAutoAnimate()
+  const [show, setShow] = useState(false)
+  const [itemId, setItemId] = useState(0)
+  const parent2 = useRef(null)
+
+  useEffect(() => {
+    parent2.current && autoAnimate(parent2.current)
+  }, [parent2])
+  const reveal = (itemId: number) => {
+    setShow(!show)
+    setItemId(itemId)
+  }
 
   const renderCSS = (status: 'completed' | 'pending') => {
     if (status === 'completed') {
@@ -76,10 +86,10 @@ export const TodoList = (props) => {
   }
 
   return (
-    <ul className="grid grid-cols-1 gap-y-3 ">
-      {dataTodos && dataTodos.length > 0 && dataTodos.map((todo: any) => (
+    <ul className="grid grid-cols-1 gap-y-3" ref={parent}>
+      {dataTodos && dataTodos.length > 0 ? dataTodos.map((todo: any) => (
         <li key={todo.id}>
-          <div className={`flex items-center rounded-12 border border-gray-200 p-custom shadow-sm ${renderCSS(todo.status)}`}>
+          <div className={`flex items-center rounded-12 border border-gray-200 p-custom shadow-sm ${renderCSS(todo.status)} overflow-hidden`}>
             <Checkbox.Root
               id={String(todo.id)}
               onClick={() => {
@@ -93,23 +103,45 @@ export const TodoList = (props) => {
               </Checkbox.Indicator>
             </Checkbox.Root>
 
-            <label className={`block pl-3 font-medium font-inter`} htmlFor={String(todo.id)}>
+            <label
+              className={`block pl-3 font-medium font-inter flex-1 text-gray-900 truncate`}
+              htmlFor={String(todo.id)}
+            >
               {todo.body}
+
             </label>
             <button
               className="ml-auto p-1 hover:text-red-600"
               aria-label="Delete"
-              onClick={() =>
-                handleDeleteTodo(todo.id)
-              }
             >
-              <XMarkIcon className="h-5 w-5" />
+              <XMarkIcon
+                onClick={() =>
+                  handleDeleteTodo(todo.id)
+                }
+                className="h-5 w-5" />
             </button>
-
           </div>
+          {/* <div className=''>Xem thêm
+          </div>
+          <textarea className='w-full' disabled={true} value={todo.body}> </textarea> */}
+          {todo.body.length >= 30 ?
+            <div ref={parent2} className='flex flex-col '>
+              <strong className="dropdown-label cursor-pointer" onClick={() => reveal(todo.id)}>Show More</strong>
+              {show && todo.id === itemId &&
+                <div
+                  className="dropdown-content">
+                  <textarea className='w-full' disabled={true} value={todo.body}> </textarea>
+                </div>}
+            </div>
+            : <></>}
         </li>
-      ))}
-    </ul>
+      )) : <>
+        <div>
+          <p className="text-gray-700">You have no {props.selectedTab !== 'all' && props.selectedTab} tasks in your to-do list. </p>
+        </div>
+      </>
+      }
+    </ul >
   )
 }
 

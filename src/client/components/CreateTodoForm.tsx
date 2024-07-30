@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react'
+import { useState } from 'react'
 
 import { api } from '@/utils/client/api'
 
@@ -33,7 +33,7 @@ export const CreateTodoForm = () => {
       },
     })
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
     createTodo({
       body: todoBody.trim(),
