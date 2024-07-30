@@ -6,7 +6,18 @@ export default {
     extend: {
       fontFamily: {
         sans: ['var(--font-manrope)'],
+        inter: ['var(--font-inter)'],
+
       },
+      fontWeight: {
+        '700': '700',
+      },
+      fontSize: {
+        '14': '14px',
+      },
+      padding: {
+        '32': '32px',
+      }
     },
     colors: {
       'white': '#ffffff',
