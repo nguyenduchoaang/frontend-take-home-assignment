@@ -184,7 +184,7 @@ export const TodoList: React.FC<TodoListProps> = (props) => {
                 {todo.body}
               </label>
               <button
-                className={`hover:bg-${todo.status == 'completed' ? 'white' : 'gray-200'} rounded-full ml-auto p-1`}
+                className={`${todo.status === "completed" ? "hover:bg-white" : "hover:bg-gray-200"} rounded-full ml-auto p-1 `}
                 aria-label="Delete"
 
                 onClick={() => {
