@@ -139,12 +139,14 @@ export const CreateTodoForm: React.FC = () => {
     const formInputElement = document.getElementById('form_create_to_do')
     if (formInputElement) {
       formInputElement.classList.remove('border-[#f96a74]')
+      formInputElement.classList.add('border-gray-200')
     }
   }
 
   const _handleBlur = () => {
     const formInputElement = document.getElementById('form_create_to_do')
     if (formInputElement && error) {
+      formInputElement.classList.remove('border-gray-200')
       formInputElement.classList.add('border-[#f96a74]')
     }
   }
@@ -185,7 +187,7 @@ export const CreateTodoForm: React.FC = () => {
     <div>
       <form
         id="form_create_to_do"
-        className="group flex items-center justify-between rounded-12 border border-gray-200 py-2 pr-4 focus-within:border-gray-400"
+        className="group flex items-center justify-between rounded-12 border py-2 pr-4 focus-within:border-gray-400 border-gray-200"
         onSubmit={handleSubmit}
       >
         <label htmlFor={TODO_INPUT_ID} className="sr-only">
