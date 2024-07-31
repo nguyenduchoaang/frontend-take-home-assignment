@@ -302,7 +302,7 @@ const Index = () => {
             )}
           </div>
 
-          <div className="mt-[40px]">
+          <div className="mt-[28px]">
             <CreateTodoForm />
           </div>
         </Tabs.Root>
