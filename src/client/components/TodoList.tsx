@@ -1,8 +1,8 @@
-import type { SVGProps } from 'react';
+import type { SVGProps } from 'react'
 
-import autoAnimate, { getTransitionSizes } from '@formkit/auto-animate';
-import * as Checkbox from '@radix-ui/react-checkbox';
-import React, { useState, useEffect, useRef } from 'react';
+import autoAnimate, { getTransitionSizes } from '@formkit/auto-animate'
+import * as Checkbox from '@radix-ui/react-checkbox'
+import React, { useState, useEffect, useRef } from 'react'
 
 /**
  * QUESTION 3:
@@ -64,21 +64,20 @@ import React, { useState, useEffect, useRef } from 'react';
  */
 
 interface CustomKeyframe extends Keyframe {
-  width?: string;
-  height?: string;
-
+  width?: string
+  height?: string
 }
 
 type TodoListProps = {
   dataTodos?: {
-    id: number;
-    body: string,
-    status: 'completed' | 'pending';
-  }[];
-  selectedTab?: string;
-  handleUpdateTodoList: (id: number, status: 'completed' | 'pending') => void;
-  handleDeleteTodo: (id: number) => void;
-};
+    id: number
+    body: string
+    status: 'completed' | 'pending'
+  }[]
+  selectedTab?: string
+  handleUpdateTodoList: (id: number, status: 'completed' | 'pending', body: string) => void
+  handleDeleteTodo: (id: number) => void
+}
 
 export const TodoList: React.FC<TodoListProps> = (props) => {
   const { dataTodos, handleUpdateTodoList, handleDeleteTodo } = props
@@ -86,45 +85,53 @@ export const TodoList: React.FC<TodoListProps> = (props) => {
   const [itemId, setItemId] = useState(0)
   const parent = useRef(null)
 
-
-
   useEffect(() => {
     if (parent.current) {
       autoAnimate(parent.current, (el, action, oldCoords, newCoords) => {
-        let keyframes: Keyframe[] = [];
+        let keyframes: Keyframe[] = []
         if (action === 'add') {
           keyframes = [
             { transform: 'scale(0)', opacity: 0 },
             { transform: 'scale(1.15)', opacity: 1, offset: 0.75 },
-            { transform: 'scale(1)', opacity: 1 }
-          ];
+            { transform: 'scale(1)', opacity: 1 },
+          ]
         }
         if (action === 'remove') {
           keyframes = [
             { transform: 'scale(1)', opacity: 1 },
             { transform: 'scale(1.15)', opacity: 1, offset: 0.33 },
             { transform: 'scale(0.75)', opacity: 0.1, offset: 0.5 },
-            { transform: 'scale(0.5)', opacity: 0 }
-          ];
+            { transform: 'scale(0.5)', opacity: 0 },
+          ]
         }
         if (action === 'remain') {
-          const deltaX = (oldCoords?.left ?? 0) - (newCoords?.left ?? 0);
-          const deltaY = (oldCoords?.top ?? 0) - (newCoords?.top ?? 0);
-          const [widthFrom, widthTo] = getTransitionSizes(el, oldCoords!, newCoords!);
-          const start: CustomKeyframe = { transform: `translate(${deltaX}px, ${deltaY}px)` };
-          const mid: CustomKeyframe = { transform: `translate(${deltaX * -0.15}px, ${deltaY * -0.15}px)`, offset: 0.75 }
-          const end: CustomKeyframe = { transform: `translate(0, 0)` };
+          const deltaX = (oldCoords?.left ?? 0) - (newCoords?.left ?? 0)
+          const deltaY = (oldCoords?.top ?? 0) - (newCoords?.top ?? 0)
+          const [widthFrom, widthTo] = getTransitionSizes(
+            el,
+            oldCoords!,
+            newCoords!
+          )
+          const start: CustomKeyframe = {
+            transform: `translate(${deltaX}px, ${deltaY}px)`,
+          }
+          const mid: CustomKeyframe = {
+            transform: `translate(${deltaX * -0.15}px, ${deltaY * -0.15}px)`,
+            offset: 0.75,
+          }
+          const end: CustomKeyframe = { transform: `translate(0, 0)` }
 
           if (widthFrom !== widthTo) {
-            start.width = `${widthFrom}px`;
-            // mid.width = `${widthFrom >= widthTo ? widthTo / 1.05 : widthTo * 1.05}px`
-            end.width = `${widthTo}px`;
+            start.width = `${widthFrom}px`
+            end.width = `${widthTo}px`
           }
 
-
-          keyframes = [start, mid, end];
+          keyframes = [start, mid, end]
         }
-        return new KeyframeEffect(el, keyframes, { duration: 500, easing: 'ease-out' });
+        return new KeyframeEffect(el, keyframes, {
+          duration: 500,
+          easing: 'ease-out',
+        })
       })
     }
   }, [dataTodos])
@@ -136,67 +143,100 @@ export const TodoList: React.FC<TodoListProps> = (props) => {
 
   const renderCSS = (status: 'completed' | 'pending') => {
     if (status === 'completed') {
-      return 'line-through text-gray-500 bg-darker'
+      return 'line-through text-gray-500 bg-gray-200 !important'
     }
-    return 'text-gray-700'
+    return 'text-gray-700 !important'
   }
 
   return (
-    <ul className="grid grid-cols-1 gap-y-3 overflow-hidden" ref={parent} >
-      {dataTodos && dataTodos.length > 0 ? dataTodos.map((todo) => (
-        <li key={todo.id}>
-          <div className={`flex items-center rounded-12 border border-gray-200 p-custom shadow-sm ${renderCSS(todo.status)} overflow-hidden`}>
-            <Checkbox.Root
-              id={String(todo.id)}
-              onClick={() => {
-                handleUpdateTodoList(todo.id, todo.status === 'completed' ? 'pending' : 'completed')
-              }}
-              checked={todo.status === 'completed'}
-              className="flex h-6 w-6 items-center justify-center rounded-6 border border-gray-300 focus:border-gray-700 focus:outline-none data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700"
+    <ul className="grid  overflow-hidden" ref={parent}>
+      {dataTodos && dataTodos.length > 0 ? (
+        dataTodos.map((todo) => (
+          <li key={todo.id} className="mb-[12px]">
+            <div
+              className={`flex items-center rounded-12 border border-gray-200 py-[12px] pl-[16px] pr-[12px] shadow-sm ${renderCSS(
+                todo.status
+              )} overflow-hidden`}
             >
-              <Checkbox.Indicator>
-                <CheckIcon className="h-4 w-4 text-white" />
-              </Checkbox.Indicator>
-            </Checkbox.Root>
+              <Checkbox.Root
+                id={String(todo.id)}
+                onClick={() => {
+                  handleUpdateTodoList(
+                    todo.id,
+                    todo.status === 'completed' ? 'pending' : 'completed',
+                    todo.body
+                  )
+                }}
+                checked={todo.status === 'completed'}
+                className="flex h-6 w-6 items-center justify-center rounded-6 border border-gray-300 focus:border-gray-700 focus:outline-none data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700"
+              >
+                <Checkbox.Indicator>
+                  <CheckIcon className="h-4 w-4 text-white" />
+                </Checkbox.Indicator>
+              </Checkbox.Root>
 
-            <label
-              className={`block pl-3 font-medium font-inter flex-1 text-gray-900 truncate`}
-              htmlFor={String(todo.id)}
-            >
-              {todo.body}
+              <label
+                className={`font-inter block flex-1 pl-3 font-medium ${renderCSS(
+                  todo.status
+                )} text-16 truncate`}
+                htmlFor={String(todo.id)}
+              >
+                {todo.body}
+              </label>
+              <button
+                className={`hover:bg-${todo.status == 'completed' ? 'white' : 'gray-200'} rounded-full ml-auto p-1`}
+                aria-label="Delete"
 
-            </label>
-            <button
-              className="ml-auto p-1 hover:text-red-600"
-              aria-label="Delete"
-            >
-              <XMarkIcon
                 onClick={() => {
                   handleDeleteTodo(todo.id)
-
                 }}
-                className="h-5 w-5" />
-            </button>
-          </div>
-          {todo.body.length >= 30 ?
-            <div className='flex flex-col'>
-              <strong className="dropdown-label cursor-pointer" onClick={() => reveal(todo.id)}>Show More</strong>
-              {show && todo.id === itemId &&
-                <div
-                  className="dropdown-content">
-                  <textarea className='w-full' disabled={true} value={todo.body}> </textarea>
-                </div>}
+              >
+                <XMarkIcon
+                  aria-hidden="true"
+                  role='img'
+                  focusable="false"
+                  className="h-5 w-5"
+                />
+              </button>
             </div>
-            : <></>}
-        </li>
-      )) : <>
-        <div>
-          <p className="text-gray-700">You have no {props.selectedTab !== 'all' && props.selectedTab} tasks in your to-do list. </p>
-        </div>
-      </>
-      }
+            {
+              todo.body.length >= 30 ? (
+                <div className="flex flex-col">
+                  <strong
+                    className="dropdown-label cursor-pointer"
+                    onClick={() => reveal(todo.id)}
+                  >
+                    Show More
+                  </strong>
+                  {show && todo.id === itemId && (
+                    <div className="dropdown-content">
+                      <textarea
+                        className="w-full"
+                        disabled={true}
+                        value={todo.body}
+                      >
+                        {' '}
+                      </textarea>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <></>
+              )
+            }
+          </li>
+        ))
+      ) : (
+        <>
+          <div>
+            <p className="text-gray-700">
+              You have no {props.selectedTab !== 'all' && props.selectedTab}{' '}
+              tasks in your to-do list.{' '}
+            </p>
+          </div>
+        </>
+      )}
     </ul >
-
   )
 }
 
@@ -237,4 +277,3 @@ const CheckIcon = (props: SVGProps<SVGSVGElement>) => {
     </svg>
   )
 }
-

@@ -1,9 +1,8 @@
-import type { FormEvent } from 'react';
+import type { FormEvent } from 'react'; // type
 
-import React, { useState } from 'react'
+import React, { useState } from 'react'; // builtin
 
-import { api } from '@/utils/client/api'
-
+import { api } from '@/utils/client/api'; // internal
 /**
  * QUESTION 1:
  * -----------
@@ -26,82 +25,86 @@ import { api } from '@/utils/client/api'
  */
 
 interface InputValidationProps {
-  name: string;
-  onChanged: (name: string, value: string, msgError: string) => void;
-  onFocus?: () => void;
-  onKeyUp?: () => void;
-  handleEnter?: () => void;
-  handleBlur?: () => void;
-  required?: boolean;
-  requiredMsg?: string;
-  minLength?: number;
-  minLengthMsg?: string;
-  maxLength?: number;
-  maxLengthMsg?: string;
+  name: string
+  onChanged: (name: string, value: string, msgError: string) => void
+  onFocus?: () => void
+  onKeyUp?: () => void
+  handleEnter?: () => void
+  handleBlur?: () => void
+  required?: boolean
+  requiredMsg?: string
+  minLength?: number
+  minLengthMsg?: string
+  maxLength?: number
+  maxLengthMsg?: string
 }
 
-const CONSTANTS = {
-  MSG_REQUIRED: 'This field is required.',
-  MSG_MIN_LENGTH_INVALID: 'Minimum length is ##',
-  MSG_MAX_LENGTH_INVALID: 'Maximum length is ##',
-};
-
 const useInputValidation = (props: InputValidationProps) => {
-  const [isValid, setIsValid] = useState<boolean>(true);
-  const [msgInvalid, setMsgInvalid] = useState<string>('');
-  const [value, setValue] = useState<string>('');
+  const [isValid, setIsValid] = useState<boolean>(true)
+  const [msgInvalid, setMsgInvalid] = useState<string>('')
+  const [value, setValue] = useState<string>('')
 
-  const onlySpaces = (str: string) => str.trim().length === 0;
+  const onlySpaces = (str: string) => str.trim().length === 0
 
   const validateInput = (value: string) => {
-    let msg = '';
+    let msg = ''
     if (value == null || value === '' || onlySpaces(value)) {
       if (props.required) {
-        msg = props.requiredMsg ? props.requiredMsg : CONSTANTS.MSG_REQUIRED;
+        msg = props.requiredMsg ? props.requiredMsg : CONSTANTS.MSG_REQUIRED
       }
     } else {
       if (props.minLength && value.length < props.minLength) {
-        msg = props.minLengthMsg ? props.minLengthMsg : CONSTANTS.MSG_MIN_LENGTH_INVALID.replace('##', props.minLength.toString());
+        msg = props.minLengthMsg
+          ? props.minLengthMsg
+          : CONSTANTS.MSG_MIN_LENGTH_INVALID.replace(
+            '##',
+            props.minLength.toString()
+          )
       } else if (props.maxLength && value.length > props.maxLength) {
-        msg = props.maxLengthMsg ? props.maxLengthMsg : CONSTANTS.MSG_MAX_LENGTH_INVALID.replace('##', props.maxLength.toString());
+        msg = props.maxLengthMsg
+          ? props.maxLengthMsg
+          : CONSTANTS.MSG_MAX_LENGTH_INVALID.replace(
+            '##',
+            props.maxLength.toString()
+          )
       }
     }
-    return msg;
-  };
+    return msg
+  }
 
   const handleChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    const msgError = validateInput(newValue);
-    setIsValid(msgError === '');
-    setMsgInvalid(msgError);
-    setValue(newValue);
-    props.onChanged(props.name, newValue, msgError);
-  };
+    const newValue = e.target.value
+    const msgError = validateInput(newValue)
+    setIsValid(msgError === '')
+    setMsgInvalid(msgError)
+    setValue(newValue)
+    props.onChanged(props.name, newValue, msgError)
+  }
 
   const handleFocus = () => {
     if (props.onFocus) {
-      props.onFocus();
+      props.onFocus()
     }
-  };
+  }
 
   const handleKeyUp = () => {
     if (props.onKeyUp) {
-      props.onKeyUp();
+      props.onKeyUp()
     }
-  };
+  }
 
   const handleEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && props.handleEnter) {
-      setValue('');
-      props.handleEnter();
+      setValue('')
+      props.handleEnter()
     }
-  };
+  }
 
   const handleBlur = () => {
     if (props.handleBlur) {
-      props.handleBlur();
+      props.handleBlur()
     }
-  };
+  }
 
   return {
     isValid,
@@ -113,38 +116,36 @@ const useInputValidation = (props: InputValidationProps) => {
     handleEnter,
     handleBlur,
     validateInput,
-  };
-};
+  }
+}
 
 export const CreateTodoForm: React.FC = () => {
-  const [value, setValue] = useState('');
-  const [error, setError] = useState('');
-
+  const [value, setValue] = useState('')
+  const [error, setError] = useState('')
   const apiContext = api.useContext()
 
   const { mutate: createTodo, isLoading: isCreatingTodo } =
     api.todo.create.useMutation({
       onSuccess: () => {
         apiContext.todo.getAll.refetch()
-        setError('');
-
+        setError('')
       },
       onError: () => {
-        setError("Failed to create todo");
-      }
+        setError('Failed to create todo')
+      },
     })
 
   const _handleFocus = () => {
-    const formInputElement = document.getElementById("form_create_to_do");
+    const formInputElement = document.getElementById('form_create_to_do')
     if (formInputElement) {
-      formInputElement.classList.remove('border-alert-warning');
+      formInputElement.classList.remove('border-[#f96a74]')
     }
   }
 
   const _handleBlur = () => {
-    const formInputElement = document.getElementById("form_create_to_do");
+    const formInputElement = document.getElementById('form_create_to_do')
     if (formInputElement && error) {
-      formInputElement.classList.add('border-alert-warning');
+      formInputElement.classList.add('border-[#f96a74]')
     }
   }
   const {
@@ -153,12 +154,12 @@ export const CreateTodoForm: React.FC = () => {
     handleKeyUp,
     handleEnter,
     handleBlur,
-    validateInput
+    validateInput,
   } = useInputValidation({
     name: 'toDo',
     onChanged: (name, value, msgError) => {
-      setValue(value);
-      setError(msgError);
+      setValue(value)
+      setError(msgError)
     },
     handleBlur: _handleBlur,
     onFocus: _handleFocus,
@@ -166,13 +167,12 @@ export const CreateTodoForm: React.FC = () => {
     requiredMsg: 'This field cannot be empty',
     minLength: 2,
     maxLength: 50,
-  });
-
+  })
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (validateInput(value)) {
-      setError(validateInput(value));
+      setError(validateInput(value))
       return
     }
     createTodo({
@@ -183,7 +183,9 @@ export const CreateTodoForm: React.FC = () => {
 
   return (
     <div>
-      <form id="form_create_to_do" className="group flex items-center justify-between rounded-12 border border-gray-200 py-2 pr-4 focus-within:border-gray-400"
+      <form
+        id="form_create_to_do"
+        className="group flex items-center justify-between rounded-12 border border-gray-200 py-2 pr-4 focus-within:border-gray-400"
         onSubmit={handleSubmit}
       >
         <label htmlFor={TODO_INPUT_ID} className="sr-only">
@@ -203,22 +205,21 @@ export const CreateTodoForm: React.FC = () => {
           className="flex-1 px-4 text-base placeholder:text-gray-400 focus:outline-none"
         />
         <button
-          className='flex cursor-pointer justify-center items-center rounded-full px-5 py-2 bg-gray-800 text-white font-700 text-14'
+          className="font-700 text-14 flex cursor-pointer items-center justify-center rounded-full bg-gray-800 px-5 py-2 text-white"
           type="submit"
           disabled={isCreatingTodo}
         >
           Add
         </button>
-
-      </form >
-      {error && (
-        <p className="text-sm mt-2 text-danger ">
-          {error}
-        </p>
-      )}
+      </form>
+      {error && <p className="mt-2 text-sm text-[#e53e3e] ">{error}</p>}
     </div>
-
   )
 }
 
 const TODO_INPUT_ID = 'todo-input-id'
+const CONSTANTS = {
+  MSG_REQUIRED: 'This field is required.',
+  MSG_MIN_LENGTH_INVALID: 'Minimum length is ##',
+  MSG_MAX_LENGTH_INVALID: 'Maximum length is ##',
+}
