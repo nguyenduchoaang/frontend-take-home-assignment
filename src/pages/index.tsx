@@ -312,7 +312,6 @@ const Index = () => {
   )
 }
 
-
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<{ message: string, id: number }[]>([]);
   const [idCounter, setIdCounter] = useState(0);

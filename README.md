@@ -79,6 +79,14 @@ Finally, publish the finished repo to your Github, then send the url
 to the repo via email to `binhdv@thenowproject.com.vn` and
 `baotran@thenowproject.com.vn`
 
+## Result Overview
+
+  - Successfully completed all 6 questions and executed the 2 test commands
+### More
+
+  - Created a custom `Input Validation Hook` to manage and validate input data for the project
+  - Developed a custom `Notification Hook` using Context to enhance user experience
+
 
 
 ## Checklist
