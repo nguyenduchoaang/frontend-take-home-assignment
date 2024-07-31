@@ -1,5 +1,6 @@
 import * as Tabs from '@radix-ui/react-tabs'
 import { useReducer, useEffect } from 'react'
+
 import { CreateTodoForm } from '@/client/components/CreateTodoForm'
 import { TodoList } from '@/client/components/TodoList'
 import { api } from '@/utils/client/api'
@@ -18,113 +19,189 @@ import { api } from '@/utils/client/api'
  * Documentation references:
  *  - https://www.radix-ui.com/docs/primitives/components/tabs
  */
+interface Todo {
+  id: number;
+  body: string;
+  status: 'completed' | 'pending';
 
-const initStates = {
+}
+
+interface TodoStatus {
+  id: number;
+  status: string;
+  queryStatus: ('completed' | 'pending')[];
+}
+
+interface State {
+  todoStatus: TodoStatus[];
+  selectedTab: string;
+  queryStatus: ('completed' | 'pending')[];
+  dataTodos: Todo[];
+  loading: boolean;
+  error: string | null;
+}
+
+interface SetSelectedTabAction {
+  type: 'SET_SELECTED_TAB';
+  payload: string;
+}
+
+interface SetDataApiAction {
+  type: 'SET_DATA_API';
+  payload: Todo[];
+}
+
+interface UpdateTodoAction {
+  type: 'UPDATE_TODO';
+  payload: {
+    todoId: number;
+    status: 'completed' | 'pending';
+  };
+}
+
+interface DeleteTodoAction {
+  type: 'DELETE_TODO';
+  payload: number;
+}
+
+interface SetLoadingAction {
+  type: 'SET_LOADING';
+  payload: boolean;
+}
+interface SetErrorAction {
+  type: 'SET_ERROR';
+  payload: string | null;
+}
+
+type Action = SetSelectedTabAction | SetDataApiAction | UpdateTodoAction | DeleteTodoAction | SetLoadingAction | SetErrorAction;
+
+const initStates: State = {
   todoStatus: [
     {
       id: 1,
-      status: "All",
+      status: 'All',
       queryStatus: ['completed', 'pending'],
     },
     {
       id: 2,
-      status: "Pending",
-      queryStatus: ['pending']
+      status: 'Pending',
+      queryStatus: ['pending'],
     },
     {
       id: 3,
-      status: "Completed",
-      queryStatus: ['completed']
-    }
+      status: 'Completed',
+      queryStatus: ['completed'],
+    },
   ],
-  selectedTab: "all",
+  selectedTab: 'all',
   queryStatus: ['completed', 'pending'],
-  dataTodos: []
-}
+  dataTodos: [],
+  loading: true,
+  error: null,
+};
 
 const action = {
-  SET_SELECTED_TAB: (payload: any) => ({
+  SET_SELECTED_TAB: (payload: string): SetSelectedTabAction => ({
     type: 'SET_SELECTED_TAB',
-    payload
+    payload,
   }),
-  SET_DATA_API: (payload: any[]) => ({
+  SET_LOADING: (payload: boolean): SetLoadingAction => ({
+    type: 'SET_LOADING',
+    payload,
+  }),
+  SET_ERROR: (payload: string | null): SetErrorAction => ({
+    type: 'SET_ERROR',
+    payload,
+  }),
+  SET_DATA_API: (payload: Todo[]): SetDataApiAction => ({
     type: 'SET_DATA_API',
-    payload
+    payload,
   }),
-  UPDATE_TODO: (payload: { id: number, status: 'completed' | 'pending' }) => ({
+  UPDATE_TODO: (payload: { todoId: number; status: 'completed' | 'pending' }): UpdateTodoAction => ({
     type: 'UPDATE_TODO',
-    payload
+    payload,
   }),
-  DELETE_TODO: (payload: number) => ({
+  DELETE_TODO: (payload: number): DeleteTodoAction => ({
     type: 'DELETE_TODO',
-    payload
-  })
-}
+    payload,
+  }),
+};
 
-const reducer = (state: typeof initStates, action: { type: string, payload: any }) => {
+const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case 'SET_SELECTED_TAB':
       return {
         ...state,
         selectedTab: action.payload,
-        queryStatus: state.todoStatus.find((item) => item.status.toLocaleLowerCase() === action.payload.toLocaleLowerCase())?.queryStatus
-      }
-    case 'SET_DATA_API':
-      const data = action.payload.sort((a: number, b: number) => - (a.id - b.id))
-
-      console.log("data", data)
+        queryStatus: state.todoStatus.find((item) => item.status.toLowerCase() === action.payload.toLowerCase())?.queryStatus || [],
+      };
+    case 'SET_LOADING':
       return {
         ...state,
-        dataTodos: action.payload
-      }
+        loading: action.payload,
+      };
+    case 'SET_ERROR':
+      return {
+        ...state,
+        error: action.payload,
+      };
+    case 'SET_DATA_API':
+      const sortedData = action.payload.sort((a, b) => b.id - a.id);
+      return {
+        ...state,
+        dataTodos: sortedData,
+      };
     case 'UPDATE_TODO':
-      const { dataTodos } = state
-      const status = action.payload.status
-      const newDataTodos = dataTodos.map((item: any) => {
+      const { dataTodos } = state;
+      const newDataTodos = dataTodos.map((item) => {
         if (item.id === action.payload.todoId) {
           return {
             ...item,
-            status: status,
-          }
+            status: action.payload.status,
+          };
         }
-        return item
-      })
-      if (state.selectedTab === 'all') {
-        return {
-          ...state,
-          dataTodos: newDataTodos
-        }
-      }
+        return item;
+      });
       return {
         ...state,
-        dataTodos: newDataTodos.filter((item: any) => item.id !== action.payload.todoId)
-      }
-
+        dataTodos: state.selectedTab === 'all' ? newDataTodos : newDataTodos.filter((item) => item.id !== action.payload.todoId),
+      };
     case 'DELETE_TODO':
-      const dataTodosAfterDelete = state.dataTodos.filter((item: any) => item.id !== action.payload)
       return {
         ...state,
-        dataTodos: dataTodosAfterDelete
-      }
+        dataTodos: state.dataTodos.filter((item) => item.id !== action.payload),
+      };
     default:
-      return state
+      return state;
   }
-}
+};
 
 const Index = () => {
   const [state, dispatch] = useReducer(reducer, initStates)
   const { queryStatus } = state;
-  const { data: dataTodos = [] } = api.todo.getAll.useQuery({
+  const { data: dataTodos = [], isLoading, isError, error: queryError } = api.todo.getAll.useQuery({
     statuses: queryStatus,
   });
   const { mutate: updateTodoStatus } = api.todoStatus.update.useMutation()
   const { mutate: deleteTodo } = api.todo.delete.useMutation()
 
   useEffect(() => {
-    dispatch(action.SET_DATA_API(dataTodos))
-  }, [dataTodos])
+    let error: string | null = null;
+    let loading = false;
 
-  const handleSelectedTab = (value) => {
+    if (isLoading) {
+      loading = true;
+    } else if (isError) {
+      error = queryError?.message || 'An error while loading data';
+    } else {
+      dispatch(action.SET_DATA_API(dataTodos));
+    }
+    dispatch(action.SET_LOADING(loading));
+    dispatch(action.SET_ERROR(error));
+  }, [dataTodos, isLoading, isError, queryError]);
+
+
+  const handleSelectedTab = (value: string) => {
     const valueNormalize = value.toLowerCase()
     dispatch(action.SET_SELECTED_TAB(valueNormalize))
   }
@@ -133,7 +210,6 @@ const Index = () => {
     const data = {
       todoId: todoId,
       status,
-
     }
     updateTodoStatus(data)
     dispatch(action.UPDATE_TODO(data))
@@ -144,7 +220,6 @@ const Index = () => {
       id: todoId,
     })
     dispatch(action.DELETE_TODO(todoId))
-
   }
 
   const renderCSSButton = (selectedTab: string, item: string) => {
@@ -176,17 +251,32 @@ const Index = () => {
 
           </Tabs.List>
           <div className="pt-10">
-            <TodoList
-              dataTodos={state.dataTodos}
-              selectedTab={state.selectedTab}
-              handleUpdateTodoList={handleUpdateTodoList}
-              handleDeleteTodo={handleDeleteTodo}
-            />
+            {state.error ? (
+              <div className="text-center text-red-500">{state.error}</div>
+            ) : state.loading ? (
+              <div className="text-center text-gray-500">Loading...</div>
+            ) : (
+              <TodoList
+                dataTodos={state.dataTodos}
+                selectedTab={state.selectedTab}
+                handleUpdateTodoList={handleUpdateTodoList}
+                handleDeleteTodo={handleDeleteTodo}
+              />
+            )}
           </div>
 
-          <div className="pt-10">
-            <CreateTodoForm />
-          </div>
+          {state.selectedTab !== 'completed' ? (
+            <div className="pt-10">
+              <CreateTodoForm />
+            </div>
+
+          ) :
+            <div className="pt-10">
+              <p className="text-center text-gray-700">
+                Change to &quot;Pending or All&quot; tab to create new todo
+              </p>
+            </div>
+          }
         </Tabs.Root>
       </div>
     </main>

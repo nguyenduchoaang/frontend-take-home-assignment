@@ -7,7 +7,6 @@ export default {
       fontFamily: {
         sans: ['var(--font-manrope)'],
         inter: ['var(--font-inter)'],
-
       },
       fontWeight: {
         '700': '700',
@@ -37,6 +36,8 @@ export default {
       'gray-900': '#0f172a',
       'gray-950': '#020617',
       'darker': '#f1f5f9',
+      'danger': '#e53e3e',
+      'alert-warning': '#f96a74'
     },
     borderRadius: {
       6: '6px',

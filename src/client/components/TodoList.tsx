@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import * as Checkbox from '@radix-ui/react-checkbox';
-import { useAutoAnimate } from '@formkit/auto-animate/react';
-import autoAnimate from '@formkit/auto-animate';
 import type { SVGProps } from 'react';
+
+import autoAnimate, { getTransitionSizes } from '@formkit/auto-animate';
+import * as Checkbox from '@radix-ui/react-checkbox';
+import React, { useState, useEffect, useRef } from 'react';
 
 /**
  * QUESTION 3:
@@ -63,16 +63,72 @@ import type { SVGProps } from 'react';
  *  - https://auto-animate.formkit.com
  */
 
-export const TodoList = (props: any) => {
+interface CustomKeyframe extends Keyframe {
+  width?: string;
+  height?: string;
+
+}
+
+type TodoListProps = {
+  dataTodos?: {
+    id: number;
+    body: string,
+    status: 'completed' | 'pending';
+  }[];
+  selectedTab?: string;
+  handleUpdateTodoList: (id: number, status: 'completed' | 'pending') => void;
+  handleDeleteTodo: (id: number) => void;
+};
+
+export const TodoList: React.FC<TodoListProps> = (props) => {
   const { dataTodos, handleUpdateTodoList, handleDeleteTodo } = props
-  const [parent, enableAnimations] = useAutoAnimate()
   const [show, setShow] = useState(false)
   const [itemId, setItemId] = useState(0)
-  const parent2 = useRef(null)
+  const parent = useRef(null)
+
+
 
   useEffect(() => {
-    parent2.current && autoAnimate(parent2.current)
-  }, [parent2])
+    if (parent.current) {
+      autoAnimate(parent.current, (el, action, oldCoords, newCoords) => {
+        let keyframes: Keyframe[] = [];
+        if (action === 'add') {
+          keyframes = [
+            { transform: 'scale(0)', opacity: 0 },
+            { transform: 'scale(1.15)', opacity: 1, offset: 0.75 },
+            { transform: 'scale(1)', opacity: 1 }
+          ];
+        }
+        if (action === 'remove') {
+          keyframes = [
+            { transform: 'scale(1)', opacity: 1 },
+            { transform: 'scale(1.15)', opacity: 1, offset: 0.33 },
+            { transform: 'scale(0.75)', opacity: 0.1, offset: 0.5 },
+            { transform: 'scale(0.5)', opacity: 0 }
+          ];
+        }
+        if (action === 'remain') {
+          const deltaX = (oldCoords?.left ?? 0) - (newCoords?.left ?? 0);
+          const deltaY = (oldCoords?.top ?? 0) - (newCoords?.top ?? 0);
+          const [widthFrom, widthTo] = getTransitionSizes(el, oldCoords!, newCoords!);
+          const start: CustomKeyframe = { transform: `translate(${deltaX}px, ${deltaY}px)` };
+          const mid: CustomKeyframe = { transform: `translate(${deltaX * -0.15}px, ${deltaY * -0.15}px)`, offset: 0.75 }
+          const end: CustomKeyframe = { transform: `translate(0, 0)` };
+
+          if (widthFrom !== widthTo) {
+            start.width = `${widthFrom}px`;
+            // mid.width = `${widthFrom >= widthTo ? widthTo / 1.05 : widthTo * 1.05}px`
+            end.width = `${widthTo}px`;
+          }
+
+
+          keyframes = [start, mid, end];
+        }
+        return new KeyframeEffect(el, keyframes, { duration: 500, easing: 'ease-out' });
+      })
+    }
+  }, [dataTodos])
+
   const reveal = (itemId: number) => {
     setShow(!show)
     setItemId(itemId)
@@ -86,8 +142,8 @@ export const TodoList = (props: any) => {
   }
 
   return (
-    <ul className="grid grid-cols-1 gap-y-3" ref={parent}>
-      {dataTodos && dataTodos.length > 0 ? dataTodos.map((todo: any) => (
+    <ul className="grid grid-cols-1 gap-y-3 overflow-hidden" ref={parent} >
+      {dataTodos && dataTodos.length > 0 ? dataTodos.map((todo) => (
         <li key={todo.id}>
           <div className={`flex items-center rounded-12 border border-gray-200 p-custom shadow-sm ${renderCSS(todo.status)} overflow-hidden`}>
             <Checkbox.Root
@@ -115,17 +171,15 @@ export const TodoList = (props: any) => {
               aria-label="Delete"
             >
               <XMarkIcon
-                onClick={() =>
+                onClick={() => {
                   handleDeleteTodo(todo.id)
-                }
+
+                }}
                 className="h-5 w-5" />
             </button>
           </div>
-          {/* <div className=''>Xem thêm
-          </div>
-          <textarea className='w-full' disabled={true} value={todo.body}> </textarea> */}
           {todo.body.length >= 30 ?
-            <div ref={parent2} className='flex flex-col '>
+            <div className='flex flex-col'>
               <strong className="dropdown-label cursor-pointer" onClick={() => reveal(todo.id)}>Show More</strong>
               {show && todo.id === itemId &&
                 <div
@@ -142,6 +196,7 @@ export const TodoList = (props: any) => {
       </>
       }
     </ul >
+
   )
 }
 
@@ -182,3 +237,4 @@ const CheckIcon = (props: SVGProps<SVGSVGElement>) => {
     </svg>
   )
 }
+

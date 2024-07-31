@@ -14,7 +14,8 @@ module.exports = {
   extends: [
     'plugin:@typescript-eslint/recommended', //
     'next',
-    'prettier',``
+    'prettier',
+    ``,
   ],
   rules: {
     '@next/next/no-html-link-for-pages': 'off',
